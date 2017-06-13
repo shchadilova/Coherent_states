@@ -20,39 +20,39 @@ class PolaronHamiltonian:
 
         # print(self.Omega0_grid.shape)
 
-    def phi_update(self, coherent_state):
+    # def phi_update(self, coherent_state):
 
-        [P, aIBi, mI, mB, n0, gBB] = self.Params
+    #     [P, aIBi, mI, mB, n0, gBB] = self.Params
 
-        dv = coherent_state.dV
+    #     dv = coherent_state.dV
 
-        amplitude_t = coherent_state.amplitude
-        PB_t = coherent_state.get_PhononMomentum()
+    #     amplitude_t = coherent_state.amplitude
+    #     PB_t = coherent_state.get_PhononMomentum()
 
-        betaSum = amplitude_t + np.conjugate(amplitude_t)
-        # print(betaSum.shape)
-        # print(dv.shape)
-        # print(self.Wk_grid.shape)
-        xp_t = 0.5 * np.dot(self.Wk_grid, betaSum * dv)
+    #     betaSum = amplitude_t + np.conjugate(amplitude_t)
+    #     # print(betaSum.shape)
+    #     # print(dv.shape)
+    #     # print(self.Wk_grid.shape)
+    #     xp_t = 0.5 * np.dot(self.Wk_grid, betaSum * dv)
 
-        return self.gnum * n0 + self.gnum * np.sqrt(n0) * xp_t + (P**2 - PB_t**2) / (2 * mI)
+    #     return self.gnum * n0 + self.gnum * np.sqrt(n0) * xp_t + (P**2 - PB_t**2) / (2 * mI)
 
     def amplitude_update(self, coherent_state):
         # here on can write any method induding Runge-Kutta 4
 
         [P, aIBi, mI, mB, n0, gBB] = self.Params
 
-        dv = coherent_state.dV
+        # Here I need an original grid
+        dv = coherent_state.grid.dV()
 
-        amplitude_t = coherent_state.amplitude
+        # Split variables into x and p
+        [x_t, p_t] = np.split(coherent_state.amplitude, 2)
         PB_t = coherent_state.get_PhononMomentum()
 
-        betaSum = amplitude_t + np.conjugate(amplitude_t)
-        xp_t = 0.5 * np.dot(self.Wk_grid, betaSum * dv)
+        h_x = 2 * self.gnum * np.sqrt(n0) * self.Wk_grid +\
+            x_t * (self.Omega0_grid - self.kcos * (P - PB_t) / mI) +\
+            self.gnum * self.Wk_grid * np.dot(self.Wk_grid, x_t * dv)
+        h_y = p_t * (self.Omega0_grid - self.kcos * (P - PB_t) / mI) +\
+            self.gnum * self.Wki_grid * np.dot(self.Wki_grid, p_t * dv)
 
-        betaDiff = amplitude_t - np.conjugate(amplitude_t)
-        xm_t = 0.5 * np.dot(self.Wki_grid, betaDiff * dv)
-
-        return -1j * (self.gnum * np.sqrt(n0) * self.Wk_grid +
-                      amplitude_t * (self.Omega0_grid - self.kcos * (P - PB_t) / mI) +
-                      self.gnum * (self.Wk_grid * xp_t + self.Wki_grid * xm_t))
+        return np.append(h_y, -1 * h_x)

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True})
 
+
 # Initialization Grid
 k_max = 1
 dk = 0.1
@@ -36,8 +37,8 @@ ham = PolaronHamiltonian.PolaronHamiltonian(cs, Params)
 
 
 # Time evolution
-tMax = 1
-dt = 1e-1
+tMax = 10
+dt = 0.1
 
 start = timer()
 
@@ -49,16 +50,9 @@ DynOv_Vec = np.zeros(tVec.size, dtype=complex)
 for ind, t in enumerate(tVec):
     PB_Vec[ind] = cs.get_PhononMomentum()
     NB_Vec[ind] = cs.get_PhononNumber()
-    DynOv_Vec[ind] = cs.get_DynOverlap()
+    #DynOv_Vec[ind] = cs.get_DynOverlap()
 
     cs.evolve(dt, ham)
-
-
-# save data
-#data = [ham.Params, tVec, PB_Vec, NB_Vec, DynOv_Vec]
-
-#dirpath = os.path.dirname(os.path.realpath(__file__))
-#np.save(dirpath + '/data/gquench_aIBi:%.2f_P:%.2f.npy' % (aIBi, P), data)
 
 end = timer()
 

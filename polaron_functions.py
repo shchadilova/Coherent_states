@@ -26,7 +26,6 @@ def g(grid_space, P, aIBi, mI, mB, n0, gBB):
 
 
 def omega0(grid_space, P, aIBi, mI, mB, n0, gBB):
-    #
     names = list(grid_space.arrays.keys())
     functions_omega0 = [lambda k: w(k, gBB, mB, n0) + (k**2 / (2 * mI)), lambda th: 0 * th + 1]
     return grid_space.function_prod(names, functions_omega0)
