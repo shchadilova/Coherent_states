@@ -37,7 +37,7 @@ ham = PolaronHamiltonian.PolaronHamiltonian(cs, Params)
 
 
 # Time evolution
-tMax = 10
+tMax = 100
 dt = 0.1
 
 start = timer()
@@ -50,7 +50,7 @@ DynOv_Vec = np.zeros(tVec.size, dtype=complex)
 for ind, t in enumerate(tVec):
     PB_Vec[ind] = cs.get_PhononMomentum()
     NB_Vec[ind] = cs.get_PhononNumber()
-    #DynOv_Vec[ind] = cs.get_DynOverlap()
+    DynOv_Vec[ind] = cs.get_DynOverlap()
 
     cs.evolve(dt, ham)
 
@@ -63,6 +63,6 @@ axN.plot(tVec, NB_Vec, 'k-')
 axN.set_xlabel('Time ($t$)')
 axN.set_ylabel('$N_{ph}$')
 axN.set_title('Number of Phonons')
-# figN.savefig('quench_PhononNumber.pdf')
+figN.savefig('quench_PhononNumber_ode.pdf')
 
 plt.show()

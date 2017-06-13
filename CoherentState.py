@@ -24,6 +24,21 @@ def amplitude_update(variables_t, t, coherent_state, hamiltonian):
     return np.append(h_y, -1 * h_x)
 
 
+def phase_update(variables_t, t, coherent_state, hamiltonian):
+
+    [P, aIBi, mI, mB, n0, gBB] = hamiltonian.Params
+
+    # Here I need the original grid
+    dv = coherent_state.grid.dV()
+
+    # Split variables into x and p
+    [x_t, p_t] = np.split(coherent_state.amplitude, 2)
+    PB_t = coherent_state.get_PhononMomentum()
+
+    return hamiltonian.gnum * n0 + hamiltonian.gnum * np.sqrt(n0) * np.dot(hamiltonian.Wk_grid, x_t * dv) +\
+        (P**2 - PB_t**2) / (2 * mI)
+
+
 class CoherentState:
     # """ This is a class that stores information about coherent state """
 
@@ -31,7 +46,7 @@ class CoherentState:
 
         size = grid_space.size()
         self.amplitude = np.zeros(2 * size, dtype=float)
-        self.phase = 0 + 0j
+        self.phase = 0
         self.grid = grid_space
 
         self.dV = np.append(grid_space.dV(), grid_space.dV())
@@ -42,25 +57,22 @@ class CoherentState:
 
     def evolve(self, dt, hamiltonian):
 
-        # self.phase = self.phase + dt * hamiltonian.phi_update(self)
-        # self.amplitude = self.amplitude + dt * hamiltonian.amplitude_update(self)
-        # ODE solver parameters
-        # ODE solver parameters
+        # ODE solver parameters: absolute and relevant error
         abserr = 1.0e-8
         relerr = 1.0e-6
-        stoptime = dt
-        numpoints = 2
 
         # Create the time samples for the output of the ODE solver.
-        # I use a large number of points, only because I want to make
-        # a plot of the solution that looks nice.
-        t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
+        t = [0, dt]
 
         # Call the ODE solver.
-        wsol = odeint(amplitude_update, self.amplitude, t, args=(self, hamiltonian),
-                      atol=abserr, rtol=relerr)
+        amplitude_sol = odeint(amplitude_update, self.amplitude, t, args=(self, hamiltonian),
+                               atol=abserr, rtol=relerr)
+        phase_sol = odeint(phase_update, self.phase, t, args=(self, hamiltonian),
+                           atol=abserr, rtol=relerr)
 
-        self.amplitude = wsol[-1]
+        # Overrite the solution to its container
+        self.amplitude = amplitude_sol[-1]
+        self.phase = phase_sol[-1]
 
     # OBSERVABLES
 
@@ -74,8 +86,8 @@ class CoherentState:
         coherent_amplitude = self.amplitude
         return np.dot(self.kcos, coherent_amplitude * coherent_amplitude * self.dV)
 
-    # def get_DynOverlap(self):
-    #     # dynamical overlap/Ramsey interferometry signal
-    #     NB_vec = self.get_PhononNumber()
-    #     exparg = -1j * self.phase - (1 / 2) * NB_vec
-    #     return np.exp(exparg)
+    def get_DynOverlap(self):
+        # dynamical overlap/Ramsey interferometry signal
+        NB_vec = self.get_PhononNumber()
+        exparg = -1j * self.phase - (1 / 2) * NB_vec
+        return np.exp(exparg)
