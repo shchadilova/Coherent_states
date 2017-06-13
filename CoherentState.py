@@ -46,8 +46,8 @@ class CoherentState:
         # self.amplitude = self.amplitude + dt * hamiltonian.amplitude_update(self)
         # ODE solver parameters
         # ODE solver parameters
-        abserr = 1.0e-12
-        relerr = 1.0e-10
+        abserr = 1.0e-8
+        relerr = 1.0e-6
         stoptime = dt
         numpoints = 2
 
