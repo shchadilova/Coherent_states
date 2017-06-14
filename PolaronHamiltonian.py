@@ -10,49 +10,44 @@ class PolaronHamiltonian:
         # Params = [P, aIBi, mI, mB, n0, gBB]
         self.Params = Params
 
-        self.grid = coherent_state.grid
-
-        self.gnum = pf.g(self.grid, *Params)
-        self.Omega0_grid = pf.omega0(self.grid, *Params)
-        self.Wk_grid = pf.Wk(self.grid, *Params)
+        self.gnum = pf.g(coherent_state.grid, *Params)
+        self.Omega0_grid = pf.omega0(coherent_state.grid, *Params)
+        self.Wk_grid = pf.Wk(coherent_state.grid, *Params)
         self.Wki_grid = 1 / self.Wk_grid
-        self.kcos = pf.kcos_func(self.grid)
+        self.kcos = pf.kcos_func(coherent_state.grid)
 
-        # print(self.Omega0_grid.shape)
 
-    def phi_update(self, coherent_state):
+def amplitude_update(variables_t, t, coherent_state, hamiltonian):
+    # here on can write any method induding Runge-Kutta 4
 
-        [P, aIBi, mI, mB, n0, gBB] = self.Params
+    [P, aIBi, mI, mB, n0, gBB] = hamiltonian.Params
 
-        dv = coherent_state.dV
+    # Here I need an original grid
+    dv = coherent_state.grid.dV()
 
-        amplitude_t = coherent_state.amplitude
-        PB_t = coherent_state.get_PhononMomentum()
+    # Split variables into x and p
+    [x_t, p_t] = np.split(variables_t, 2)
+    PB_t = coherent_state.get_PhononMomentum()
 
-        betaSum = amplitude_t + np.conjugate(amplitude_t)
-        # print(betaSum.shape)
-        # print(dv.shape)
-        # print(self.Wk_grid.shape)
-        xp_t = 0.5 * np.dot(self.Wk_grid, betaSum * dv)
+    h_x = 2 * hamiltonian.gnum * np.sqrt(n0) * hamiltonian.Wk_grid +\
+        x_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
+        hamiltonian.gnum * hamiltonian.Wk_grid * np.dot(hamiltonian.Wk_grid, x_t * dv)
+    h_y = p_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
+        hamiltonian.gnum * hamiltonian.Wki_grid * np.dot(hamiltonian.Wki_grid, p_t * dv)
 
-        return self.gnum * n0 + self.gnum * np.sqrt(n0) * xp_t + (P**2 - PB_t**2) / (2 * mI)
+    return np.append(h_y, -1 * h_x)
 
-    def amplitude_update(self, coherent_state):
-        # here on can write any method induding Runge-Kutta 4
 
-        [P, aIBi, mI, mB, n0, gBB] = self.Params
+def phase_update(variables_t, t, coherent_state, hamiltonian):
 
-        dv = coherent_state.dV
+    [P, aIBi, mI, mB, n0, gBB] = hamiltonian.Params
 
-        amplitude_t = coherent_state.amplitude
-        PB_t = coherent_state.get_PhononMomentum()
+    # Here I need the original grid
+    dv = coherent_state.grid.dV()
 
-        betaSum = amplitude_t + np.conjugate(amplitude_t)
-        xp_t = 0.5 * np.dot(self.Wk_grid, betaSum * dv)
+    # Split variables into x and p
+    [x_t, p_t] = np.split(coherent_state.amplitude, 2)
+    PB_t = coherent_state.get_PhononMomentum()
 
-        betaDiff = amplitude_t - np.conjugate(amplitude_t)
-        xm_t = 0.5 * np.dot(self.Wki_grid, betaDiff * dv)
-
-        return -1j * (self.gnum * np.sqrt(n0) * self.Wk_grid +
-                      amplitude_t * (self.Omega0_grid - self.kcos * (P - PB_t) / mI) +
-                      self.gnum * (self.Wk_grid * xp_t + self.Wki_grid * xm_t))
+    return hamiltonian.gnum * n0 + hamiltonian.gnum * np.sqrt(n0) * np.dot(hamiltonian.Wk_grid, x_t * dv) +\
+        (P**2 - PB_t**2) / (2 * mI)

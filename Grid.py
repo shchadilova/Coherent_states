@@ -83,9 +83,7 @@ class Grid:
 
         output = self.function_prod(list_of_unit_vectors, list_of_functions)
 
-        #print(len(output))
         return output * grid_diff.reshape(grid_diff.size)
-        # use simps method for integration since there is no dk and dth yet
 
     def size(self):
         # this method returns the number of grid points
@@ -94,24 +92,3 @@ class Grid:
         for unit in list_of_unit_vectors:
             grid_size = grid_size * len(self.arrays[unit])
         return grid_size
-
-    # def construct_grid(self):
-    #     # construct grid from self.arrays
-    #     # comment: we can use function_prod here with list_of_functions
-    #     # filled with identity functions (need to write such function)
-
-    #     list_of_unit_vectors = list(self.arrays.keys())
-
-    #     outer_product = self.arrays[list_of_unit_vectors[0]]
-
-    #     if(len(list_of_unit_vectors) == 1):
-    #         return outer_product
-
-    #     for ind, name in enumerate(list_of_unit_vectors[1:]):
-    #         temp = self.arrays[name]
-    #         outer_product = np.outer(outer_product, temp)
-
-    #     return outer_product.reshape(outer_product.size)
-
-    # def integrate_on_grid(self, array):
-        # takes an array on a grid and integrates it
