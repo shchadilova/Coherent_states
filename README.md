@@ -1,2 +1,2 @@
-# Variational-calculations
-This is a project that keeps track of various variational methods we use for the description of correlated quantum systems
+# Variational approach: Coherent states
+This code allows to make time dependent variational calculation in the class of coherent states.
