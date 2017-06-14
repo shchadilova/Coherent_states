@@ -63,6 +63,6 @@ axN.plot(tVec, NB_Vec, 'k-')
 axN.set_xlabel('Time ($t$)')
 axN.set_ylabel('$N_{ph}$')
 axN.set_title('Number of Phonons')
-figN.savefig('quench_PhononNumber_ode.pdf')
+figN.savefig('quench_PhononNumber.pdf')
 
 plt.show()
