@@ -37,7 +37,7 @@ ham = PolaronHamiltonian.PolaronHamiltonian(cs, Params)
 
 
 # Time evolution
-tMax = 100
+tMax = 10
 dt = 0.1
 
 start = timer()
