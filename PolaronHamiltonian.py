@@ -15,6 +15,7 @@ class PolaronHamiltonian:
         self.Wk_grid = pf.Wk(coherent_state.grid, *Params)
         self.Wki_grid = 1 / self.Wk_grid
         self.kcos = pf.kcos_func(coherent_state.grid)
+        self.dv = coherent_state.grid.dV()
 
 
 def amplitude_update(variables_t, t, coherent_state, hamiltonian):
@@ -27,7 +28,7 @@ def amplitude_update(variables_t, t, coherent_state, hamiltonian):
 
     # Split variables into x and p
     [x_t, p_t] = np.split(variables_t, 2)
-    PB_t = coherent_state.get_PhononMomentum()
+    PB_t = 0.5 * (variables_t * variables_t) @ coherent_state.dV
 
     h_x = 2 * hamiltonian.gnum * np.sqrt(n0) * hamiltonian.Wk_grid +\
         x_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
@@ -47,7 +48,7 @@ def phase_update(variables_t, t, coherent_state, hamiltonian):
 
     # Split variables into x and p
     [x_t, p_t] = np.split(coherent_state.amplitude, 2)
-    PB_t = coherent_state.get_PhononMomentum()
+    PB_t = 0.5 * np.dot(coherent_state.amplitude * coherent_state.amplitude, coherent_state.dV)
 
     return hamiltonian.gnum * n0 + hamiltonian.gnum * np.sqrt(n0) * np.dot(hamiltonian.Wk_grid, x_t * dv) +\
         (P**2 - PB_t**2) / (2 * mI)

@@ -6,13 +6,16 @@ import CoherentState
 import PolaronHamiltonian
 import matplotlib
 import matplotlib.pyplot as plt
+import cProfile
+import re
 
+cProfile.run('re.compile("foo|bar")')
 matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True})
 
 
 # Initialization Grid
-k_max = 1
-dk = 0.1
+k_max = 10
+dk = 0.05
 Ntheta = 10
 dtheta = np.pi / (Ntheta - 1)
 
