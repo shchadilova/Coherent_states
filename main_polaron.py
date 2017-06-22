@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import cProfile
 import re
 
-cProfile.run('re.compile("foo|bar")')
+# cProfile.run('re.compile("foo|bar")')
 matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True})
 
 
@@ -32,8 +32,8 @@ mI = 1
 mB = 1
 n0 = 1
 gBB = (4 * np.pi / mB) * 0.05
-P = 0.1
-aIBi = -10
+P = 1.
+aIBi = -1.
 
 Params = [P, aIBi, mI, mB, n0, gBB]
 ham = PolaronHamiltonian.PolaronHamiltonian(cs, Params)
@@ -49,12 +49,14 @@ tVec = np.arange(0, tMax, dt)
 PB_Vec = np.zeros(tVec.size, dtype=float)
 NB_Vec = np.zeros(tVec.size, dtype=float)
 DynOv_Vec = np.zeros(tVec.size, dtype=complex)
+MomDisp_Vec = np.zeros(tVec.size, dtype=float)
 
 for ind, t in enumerate(tVec):
-    PB_Vec[ind] = cs.get_PhononMomentum()
-    NB_Vec[ind] = cs.get_PhononNumber()
-    DynOv_Vec[ind] = cs.get_DynOverlap()
 
+    PB_Vec[ind] = cs.get_PhononMomentum(ham)
+    NB_Vec[ind] = cs.get_PhononNumber(ham)
+    DynOv_Vec[ind] = cs.get_DynOverlap(ham)
+    MomDisp_Vec[ind] = cs.get_MomentumDispersion(ham)
     cs.evolve(dt, ham)
 
 end = timer()
@@ -62,10 +64,17 @@ end = timer()
 print(end - start)
 
 figN, axN = plt.subplots()
-axN.plot(tVec, NB_Vec, 'k-')
+axN.plot(tVec, MomDisp_Vec, 'k-')
 axN.set_xlabel('Time ($t$)')
-axN.set_ylabel('$N_{ph}$')
+axN.set_ylabel('$\Delta P^2_{imp}$')
 axN.set_title('Number of Phonons')
-figN.savefig('quench_PhononNumber.pdf')
+figN.savefig('quaench_momdisp.pdf')
+
+# figN, axN = plt.subplots()
+# axN.plot(tVec, NB_Vec, 'k-')
+# axN.set_xlabel('Time ($t$)')
+# axN.set_ylabel('$N_{ph}$')
+# axN.set_title('Number of Phonons')
+# figN.savefig('quaench_momdisp.pdf')
 
 plt.show()

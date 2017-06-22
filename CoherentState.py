@@ -1,7 +1,8 @@
 import numpy as np
 from polaron_functions import kcos_func
 from scipy.integrate import odeint
-from PolaronHamiltonian import amplitude_update, phase_update
+from PolaronHamiltonian import var_update
+from copy import copy
 
 
 class CoherentState:
@@ -9,50 +10,57 @@ class CoherentState:
 
     def __init__(self, grid_space):
 
-        size = grid_space.size()
-        self.amplitude = np.zeros(2 * size, dtype=float)
-        self.phase = 0
+        self.size = grid_space.size()
+        self.variables = np.zeros(2 * self.size + 1, dtype=float)
         self.grid = grid_space
 
-        self.dV = np.append(grid_space.dV(), grid_space.dV())
-        self.kcos = np.append(kcos_func(self.grid), kcos_func(self.grid))
-        # self.sigma = np.bmat([[np.zeros(size, size), np.identity(size)],
-        #                      [np.zeros(size, size), np.identity(size)]])
+        self.dV = grid_space.dV()
+
     # EVOLUTION
 
     def evolve(self, dt, hamiltonian):
 
         # ODE solver parameters: absolute and relevant error
-        abserr = 1.0e-8
-        relerr = 1.0e-6
+        abserr = 1.0e-10
+        relerr = 1.0e-10
 
         # Create the time samples for the output of the ODE solver.
         t = [0, dt]
 
         # Call the ODE solver.
-        amplitude_sol = odeint(amplitude_update, self.amplitude, t, args=(self, hamiltonian),
-                               atol=abserr, rtol=relerr)
-        phase_sol = odeint(phase_update, self.phase, t, args=(self, hamiltonian),
-                           atol=abserr, rtol=relerr)
+
+        var_sol = odeint(var_update, self.variables, t, args=(self, hamiltonian),
+                         atol=abserr, rtol=relerr)
 
         # Overrite the solution to its container
-        self.amplitude = amplitude_sol[-1]
-        self.phase = phase_sol[-1]
+        self.variables = var_sol[-1]
 
     # OBSERVABLES
 
-    def get_PhononNumber(self):
+    def get_PhononNumber(self, hamiltonian):
 
-        coherent_amplitude = self.amplitude
-        return 0.5 * np.dot(coherent_amplitude * coherent_amplitude, self.dV)
+        x_t = self.variables[0:self.size]
+        p_t = self.variables[self.size: (2 * self.size)]
 
-    def get_PhononMomentum(self):
+        return 0.5 * np.dot((x_t**2 + p_t**2), self.dV)
 
-        coherent_amplitude = self.amplitude
-        return np.dot(self.kcos, coherent_amplitude * coherent_amplitude * self.dV)
+    def get_PhononMomentum(self, hamiltonian):
 
-    def get_DynOverlap(self):
+        x_t = self.variables[0:self.size]
+        p_t = self.variables[self.size: (2 * self.size)]
+
+        return 0.5 * np.dot(hamiltonian.kcos, (x_t**2 + p_t**2) * self.dV)
+
+    def get_DynOverlap(self, hamiltonian):
         # dynamical overlap/Ramsey interferometry signal
-        NB_vec = self.get_PhononNumber()
-        exparg = -1j * self.phase - (1 / 2) * NB_vec
+        NB_t = self.get_PhononNumber(hamiltonian)
+        exparg = -1j * self.variables[-1] - (1 / 2) * NB_t
+
         return np.exp(exparg)
+
+    def get_MomentumDispersion(self, hamiltonian):
+
+        x_t = self.variables[0:self.size]
+        p_t = self.variables[self.size: (2 * self.size)]
+
+        return 0.5 * np.dot(hamiltonian.kpow2, (x_t**2 + p_t**2) * self.dV)

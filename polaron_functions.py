@@ -43,3 +43,10 @@ def kcos_func(grid_space):
     names = list(grid_space.arrays.keys())
     functions_kcos = [lambda k: k, np.cos]
     return grid_space.function_prod(names, functions_kcos)
+
+
+def kpow2_func(grid_space):
+    #
+    names = list(grid_space.arrays.keys())
+    functions_kpow2 = [lambda k: k**2, lambda th: 0 * th + 1]
+    return grid_space.function_prod(names, functions_kpow2)
